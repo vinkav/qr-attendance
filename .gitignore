@@ -1,4 +1,5 @@
 node_modules/
+apps/web/certificates/
 .next/
 dist/
 .env

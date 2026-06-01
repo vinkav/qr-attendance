@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { useAuth } from "@/lib/auth-context";
+import { homeForRole } from "@/lib/roles";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -12,7 +13,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace(user.role === "LECTURER" ? "/lecturer" : "/student/scan");
+      router.replace(homeForRole(user.role));
     }
   }, [user, loading, router]);
 
@@ -43,7 +44,7 @@ export default function HomePage() {
               Скан QR, GPS, миттєва відмітка
             </p>
             <Link href="/login" className="btn btn-primary">
-              Сканувати
+              Увійти
             </Link>
           </div>
         </div>

@@ -64,9 +64,6 @@ export default function LoginPage() {
         <p style={{ marginTop: "1rem", color: "var(--muted)" }}>
           Немає облікового запису? <Link href="/register">Зареєструватися</Link>
         </p>
-        <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--muted)" }}>
-          Демо: lecturer@demo.edu / demo1234
-        </p>
       </main>
     </>
   );

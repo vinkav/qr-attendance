@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
+import { LecturerNav } from "@/components/LecturerNav";
+import { BackLink } from "@/components/BackLink";
 import { api } from "@/lib/api";
 
 export default function StartSessionPage() {
@@ -52,7 +54,9 @@ export default function StartSessionPage() {
   return (
     <>
       <Nav />
+      <LecturerNav />
       <main className="container" style={{ maxWidth: 480 }}>
+        <BackLink href={`/lecturer/courses/${courseId}`} label="← До курсу" />
         <h1 style={{ marginBottom: "1rem" }}>Почати сесію</h1>
         <p style={{ color: "var(--muted)", marginBottom: "1.25rem", lineHeight: 1.5 }}>
           Перебувайте в аудиторії. Система збереже GPS-координати як еталон для перевірки студентів.

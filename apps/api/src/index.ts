@@ -6,8 +6,8 @@ dotenv.config();
 
 import app from "./app";
 
-const PORT = Number(process.env.API_PORT) || 4000;
+const PORT = Number(process.env.PORT || process.env.API_PORT) || 4000;
 
-app.listen(PORT, () => {
-  console.log(`API: http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`API: http://localhost:${PORT} (усі інтерфейси)`);
 });

@@ -1,7 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
+import { Role } from "@prisma/client";
 import { prisma } from "../lib/prisma";
+import { getCourseIfAllowed } from "../lib/courseAccess";
 import { requireAuth, requireRole } from "../middleware/auth";
+
+function sessionWhere(sessionId: string, userId: string, role: Role) {
+  if (role === "ADMIN") return { id: sessionId };
+  return { id: sessionId, lecturerId: userId };
+}
 import { generateSessionSecret, buildQrToken } from "../lib/totp";
 
 const router = Router();
@@ -23,9 +30,11 @@ router.post("/", requireRole("LECTURER", "ADMIN"), async (req, res) => {
     return;
   }
 
-  const course = await prisma.course.findFirst({
-    where: { id: parsed.data.courseId, lecturerId: req.auth!.userId },
-  });
+  const course = await getCourseIfAllowed(
+    parsed.data.courseId,
+    req.auth!.userId,
+    req.auth!.role
+  );
   if (!course) {
     res.status(404).json({ error: "Курс не знайдено" });
     return;
@@ -42,7 +51,7 @@ router.post("/", requireRole("LECTURER", "ADMIN"), async (req, res) => {
   const session = await prisma.session.create({
     data: {
       courseId: course.id,
-      lecturerId: req.auth!.userId,
+      lecturerId: course.lecturerId,
       latitude: parsed.data.latitude,
       longitude: parsed.data.longitude,
       radiusMeters: parsed.data.radiusMeters ?? 80,
@@ -69,7 +78,7 @@ router.get("/:sessionId", async (req, res) => {
   }
 
   const { role, userId } = req.auth!;
-  const isLecturer = session.lecturerId === userId;
+  const isLecturer = session.lecturerId === userId || role === "ADMIN";
   const isEnrolled =
     role === "STUDENT" &&
     (await prisma.enrollment.findUnique({
@@ -116,7 +125,7 @@ router.get("/:sessionId/qr", async (req, res) => {
 
 router.post("/:sessionId/close", requireRole("LECTURER", "ADMIN"), async (req, res) => {
   const session = await prisma.session.findFirst({
-    where: { id: req.params.sessionId, lecturerId: req.auth!.userId },
+    where: sessionWhere(req.params.sessionId, req.auth!.userId, req.auth!.role),
   });
   if (!session) {
     res.status(404).json({ error: "Сесію не знайдено" });
@@ -176,6 +185,83 @@ router.get("/:sessionId/attendance", async (req, res) => {
   });
 });
 
+router.post(
+  "/:sessionId/attendance/:userId/mark",
+  requireRole("LECTURER", "ADMIN"),
+  async (req, res) => {
+    const schema = z.object({
+      status: z.enum(["PRESENT", "LATE"]).default("PRESENT"),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Невірний статус" });
+      return;
+    }
+
+    const session = await prisma.session.findFirst({
+      where: sessionWhere(req.params.sessionId, req.auth!.userId, req.auth!.role),
+    });
+    if (!session) {
+      res.status(404).json({ error: "Сесію не знайдено" });
+      return;
+    }
+
+    const enrolled = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: { userId: req.params.userId, courseId: session.courseId },
+      },
+    });
+    if (!enrolled) {
+      res.status(400).json({ error: "Студент не записаний на курс" });
+      return;
+    }
+
+    const attendance = await prisma.attendance.upsert({
+      where: {
+        sessionId_userId: { sessionId: session.id, userId: req.params.userId },
+      },
+      create: {
+        sessionId: session.id,
+        userId: req.params.userId,
+        status: parsed.data.status,
+        rejectReason: null,
+        distanceMeters: null,
+      },
+      update: {
+        status: parsed.data.status,
+        rejectReason: null,
+        scannedAt: new Date(),
+      },
+      include: { user: { select: { id: true, fullName: true, email: true } } },
+    });
+
+    res.json({ attendance, message: "Відмітку додано вручну" });
+  }
+);
+
+router.delete(
+  "/:sessionId/attendance/:userId",
+  requireRole("LECTURER", "ADMIN"),
+  async (req, res) => {
+    const session = await prisma.session.findFirst({
+      where: sessionWhere(req.params.sessionId, req.auth!.userId, req.auth!.role),
+    });
+    if (!session) {
+      res.status(404).json({ error: "Сесію не знайдено" });
+      return;
+    }
+
+    const result = await prisma.attendance.deleteMany({
+      where: { sessionId: session.id, userId: req.params.userId },
+    });
+    if (result.count === 0) {
+      res.status(404).json({ error: "Відмітку не знайдено" });
+      return;
+    }
+    res.json({ message: "Відмітку знято" });
+  }
+);
+
 router.get("/:sessionId/report.csv", async (req, res) => {
   const session = await prisma.session.findUnique({
     where: { id: req.params.sessionId },
@@ -228,16 +314,19 @@ router.get("/:sessionId/report.csv", async (req, res) => {
   }
 
   const bom = "\uFEFF";
-  const filename = `vidviduvannist-${session.course.name.replace(/\s+/g, "_")}-${session.startedAt.toISOString().slice(0, 10)}.csv`;
+  const date = session.startedAt.toISOString().slice(0, 10);
+  const asciiName = `vidviduvannist-${date}-${session.id.slice(0, 8)}.csv`;
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.setHeader("Content-Disposition", `attachment; filename="${asciiName}"`);
   res.send(bom + lines.join("\n"));
 });
 
 router.get("/course/:courseId", async (req, res) => {
-  const course = await prisma.course.findFirst({
-    where: { id: req.params.courseId, lecturerId: req.auth!.userId },
-  });
+  const course = await getCourseIfAllowed(
+    req.params.courseId,
+    req.auth!.userId,
+    req.auth!.role
+  );
   if (!course) {
     res.status(404).json({ error: "Курс не знайдено" });
     return;

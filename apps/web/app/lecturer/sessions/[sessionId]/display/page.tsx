@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { api } from "@/lib/api";
 
@@ -52,8 +53,26 @@ export default function QrDisplayPage() {
         background: "#fff",
         color: "#111",
         padding: "2rem",
+        position: "relative",
       }}
     >
+      <Link
+        href={`/lecturer/sessions/${sessionId}`}
+        style={{
+          position: "absolute",
+          top: "1rem",
+          left: "1rem",
+          padding: "0.5rem 1rem",
+          background: "#f1f5f9",
+          color: "#111",
+          borderRadius: 8,
+          textDecoration: "none",
+          fontWeight: 600,
+          fontSize: "0.9rem",
+        }}
+      >
+        ← Назад до сесії
+      </Link>
       <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>Відскануйте QR-код</h1>
       <p style={{ color: "#555", marginBottom: "1.5rem" }}>
         Код оновлюється кожні ~20 с · залишилось ~{expiresIn} с

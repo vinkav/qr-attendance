@@ -84,6 +84,36 @@ router.get("/me", requireAuth, async (req, res) => {
   res.json({ user });
 });
 
+router.patch("/me", requireAuth, async (req, res) => {
+  const schema = z.object({
+    fullName: z.string().min(2).optional(),
+    password: z.string().min(6).optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Невірні дані профілю" });
+    return;
+  }
+
+  const data: { fullName?: string; passwordHash?: string } = {};
+  if (parsed.data.fullName) data.fullName = parsed.data.fullName;
+  if (parsed.data.password) {
+    data.passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  }
+
+  if (Object.keys(data).length === 0) {
+    res.status(400).json({ error: "Немає даних для оновлення" });
+    return;
+  }
+
+  const user = await prisma.user.update({
+    where: { id: req.auth!.userId },
+    data,
+    select: { id: true, email: true, fullName: true, role: true, deviceHash: true },
+  });
+  res.json({ user });
+});
+
 router.post("/device", requireAuth, async (req, res) => {
   const schema = z.object({ deviceHash: z.string().min(8).max(128) });
   const parsed = schema.safeParse(req.body);

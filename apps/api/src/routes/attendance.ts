@@ -194,6 +194,45 @@ async function recordRejected(
   });
 }
 
+router.get("/my/stats", async (req, res) => {
+  const userId = req.auth!.userId;
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: { userId },
+    include: { course: { select: { id: true, name: true, code: true } } },
+  });
+
+  const courses = [];
+  for (const e of enrollments) {
+    const sessions = await prisma.session.findMany({
+      where: { courseId: e.courseId },
+      select: { id: true },
+    });
+    const sessionIds = sessions.map((s) => s.id);
+    const attended =
+      sessionIds.length === 0
+        ? 0
+        : await prisma.attendance.count({
+            where: {
+              userId,
+              sessionId: { in: sessionIds },
+              status: { in: ["PRESENT", "LATE"] },
+            },
+          });
+    const total = sessions.length;
+    courses.push({
+      courseId: e.course.id,
+      courseName: e.course.name,
+      courseCode: e.course.code,
+      totalSessions: total,
+      attendedSessions: attended,
+      percent: total > 0 ? Math.round((attended / total) * 100) : 0,
+    });
+  }
+
+  res.json({ courses });
+});
+
 router.get("/my", async (req, res) => {
   const records = await prisma.attendance.findMany({
     where: { userId: req.auth!.userId },

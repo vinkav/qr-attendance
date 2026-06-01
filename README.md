@@ -48,7 +48,7 @@ copy .env.example apps\api\.env
 CREATE DATABASE qr_attendance;
 ```
 
-### 3. Міграції та демо-дані
+### 3. Міграції та початкові дані
 
 ```bash
 npm run db:generate
@@ -68,12 +68,23 @@ npm run dev:web
 - Веб: http://localhost:3000  
 - API: http://localhost:4000  
 
-### Демо-облікові записи
+**Скан QR з телефона** (потрібен HTTPS):
+
+```bash
+npm run dev:api
+npm run dev:web:https
+```
+
+- ПК: https://localhost:3000  
+- Телефон (та сама Wi‑Fi): `https://ВАШ_IP:3000/student/scan` — прийміть попередження про сертифікат  
+
+### Початкові облікові записи (після seed)
 
 | Роль | Email | Пароль |
 |------|-------|--------|
-| Викладач | lecturer@demo.edu | demo1234 |
-| Студент | student1@demo.edu | demo1234 |
+| Адміністратор | admin@edu.ua | demo1234 |
+| Викладач | lecturer@edu.ua | demo1234 |
+| Студент | student1@edu.ua … student5@edu.ua | demo1234 |
 
 ## Сценарій використання
 
@@ -93,6 +104,10 @@ npm run dev:web
 | GET | `/api/sessions/:id/qr` | Поточний QR-токен |
 | POST | `/api/attendance/scan` | Відмітка студента |
 | GET | `/api/sessions/:id/report.csv` | Звіт CSV |
+
+## Демонстрація в інтернеті (з GitHub)
+
+Публічне HTTPS-посилання для захисту роботи: **Vercel** (фронт) + **Render** (API + БД). Покроково: [DEPLOY.md](./DEPLOY.md).
 
 ## Публікація на GitHub
 

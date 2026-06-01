@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+/** У браузері — той самий origin (Next проксує /api на бекенд). */
+export function getApiUrl(): string {
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+}
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -24,11 +30,19 @@ export async function api<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
+  } catch {
+    throw new Error(
+      `Не вдалося з’єднатися з API (${getApiUrl()}). Запустіть на ПК: npm run dev:api`
+    );
+  }
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? "Помилка запиту");
+    const msg = (data as { error?: string }).error;
+    throw new Error(msg ?? `Помилка запиту (${res.status})`);
   }
   return data as T;
 }
@@ -51,9 +65,28 @@ export function getDeviceHash(): string {
   return hash;
 }
 
+export async function downloadCourseReport(courseId: string, from: string, to: string) {
+  const token = getToken();
+  const q = new URLSearchParams({ from, to });
+  const res = await fetch(`${getApiUrl()}/api/courses/${courseId}/report.csv?${q}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? "Не вдалося завантажити звіт");
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `course-report-${from}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadCsv(sessionId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/api/sessions/${sessionId}/report.csv`, {
+  const res = await fetch(`${getApiUrl()}/api/sessions/${sessionId}/report.csv`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {

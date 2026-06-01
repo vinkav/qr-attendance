@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
+import { LecturerNav } from "@/components/LecturerNav";
+import { BackLink } from "@/components/BackLink";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
@@ -23,11 +25,13 @@ export default function CourseSessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
 
   useEffect(() => {
-    if (!authLoading && user?.role !== "LECTURER") router.replace("/login");
+    if (!authLoading && user && user.role !== "LECTURER" && user.role !== "ADMIN") {
+      router.replace("/login");
+    }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user?.role === "LECTURER") {
+    if (user?.role === "LECTURER" || user?.role === "ADMIN") {
       api<{ sessions: Session[] }>(`/api/sessions/course/${courseId}`)
         .then((d) => setSessions(d.sessions))
         .catch(console.error);
@@ -37,10 +41,9 @@ export default function CourseSessionsPage() {
   return (
     <>
       <Nav />
+      <LecturerNav />
       <main className="container">
-        <Link href="/lecturer" style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-          ← Назад
-        </Link>
+        <BackLink href="/lecturer/courses" label="← До курсів" />
         <h1 style={{ margin: "1rem 0" }}>Історія сесій</h1>
         {sessions.length === 0 ? (
           <p style={{ color: "var(--muted)" }}>Сесій ще немає</p>

@@ -42,6 +42,7 @@ model Course {
   id          String       @id @default(cuid())
   name        String
   code        String?
+  enrollCode  String?      @unique
   lecturerId  String
   lecturer    User         @relation("LecturerCourses", fields: [lecturerId], references: [id])
   createdAt   DateTime     @default(now())
