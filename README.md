@@ -26,7 +26,7 @@ apps/web   — веб-портал (викладач + студент)
 ### 1. Клонування та залежності
 
 ```bash
-git clone https://github.com/<user>/qr-attendance.git
+git clone https://github.com/vinkav/qr-attendance.git
 cd qr-attendance
 npm install
 ```
@@ -101,7 +101,7 @@ git init
 git add .
 git commit -m "Initial commit: QR attendance system"
 git branch -M main
-git remote add origin https://github.com/<user>/<repo>.git
+git remote add origin https://github.com/vinkav/qr-attendance.git
 git push -u origin main
 ```
 
