@@ -1,0 +1,5 @@
+{
+  "installCommand": "cd ../.. && npm install",
+  "buildCommand": "npm run build && npx prisma db push --accept-data-loss && npm run db:seed",
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+}

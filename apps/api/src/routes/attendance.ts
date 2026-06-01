@@ -76,8 +76,10 @@ router.post("/scan", async (req, res) => {
     return;
   }
 
+  const qrWindow = tokenCheck.window;
+
   const existingWindow = await prisma.usedQrWindow.findUnique({
-    where: { sessionId_window: { sessionId, window: tokenCheck.window } },
+    where: { sessionId_window: { sessionId, window: qrWindow } },
   });
   if (existingWindow) {
     const dup = await prisma.attendance.findUnique({
@@ -132,7 +134,7 @@ router.post("/scan", async (req, res) => {
   try {
     const attendance = await prisma.$transaction(async (tx) => {
       await tx.usedQrWindow.create({
-        data: { sessionId, window: tokenCheck.window },
+        data: { sessionId, window: qrWindow },
       });
       return tx.attendance.upsert({
         where: { sessionId_userId: { sessionId, userId } },

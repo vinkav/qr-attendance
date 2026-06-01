@@ -85,7 +85,7 @@ router.get("/:sessionId", async (req, res) => {
       where: { userId_courseId: { userId, courseId: session.courseId } },
     }));
 
-  if (!isLecturer && !isEnrolled && role !== "ADMIN") {
+  if (!isLecturer && !isEnrolled) {
     res.status(403).json({ error: "Немає доступу до цієї сесії" });
     return;
   }

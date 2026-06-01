@@ -107,7 +107,7 @@ npm run dev:web:https
 
 ## Демонстрація в інтернеті (з GitHub)
 
-Публічне HTTPS-посилання для захисту роботи: **Vercel** (фронт) + **Render** (API + БД). Покроково: [DEPLOY.md](./DEPLOY.md).
+Публічне HTTPS-посилання для захисту: **Neon** (БД) + **Vercel** (API + сайт), без картки на Render. Покроково: [DEPLOY.md](./DEPLOY.md).
 
 ## Публікація на GitHub
 

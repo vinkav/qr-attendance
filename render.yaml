@@ -1,4 +1,5 @@
-# Демо-деплой API + PostgreSQL з GitHub (https://render.com)
+# Необов’язково: Render часто вимагає банківську картку.
+# Рекомендований демо без картки: Neon + Vercel — див. DEPLOY.md
 # Після деплою вкажіть URL API у Vercel як API_URL
 services:
   - type: web

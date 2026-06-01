@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     const api =
-      process.env.API_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:4000";
+      process.env.API_URL?.replace(/\/$/, "") ??
+      (process.env.VERCEL ? undefined : "http://127.0.0.1:4000");
+    if (!api) return [];
     return [
       {
         source: "/api/:path*",
