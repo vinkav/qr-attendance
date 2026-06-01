@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  fullName     String
+  role         Role          @default(STUDENT)
+  deviceHash   String?
+  createdAt    DateTime      @default(now())
+  courses      Course[]      @relation("LecturerCourses")
+  enrollments  Enrollment[]
+  sessions     Session[]     @relation("LecturerSessions")
+  attendance   Attendance[]
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  name        String
+  code        String?
+  lecturerId  String
+  lecturer    User         @relation("LecturerCourses", fields: [lecturerId], references: [id])
+  createdAt   DateTime     @default(now())
+  enrollments Enrollment[]
+  sessions    Session[]
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Session {
+  id              String        @id @default(cuid())
+  courseId        String
+  lecturerId      String
+  latitude        Float
+  longitude       Float
+  radiusMeters    Float         @default(80)
+  intervalSeconds Int           @default(20)
+  totpSecret      String
+  status          SessionStatus @default(ACTIVE)
+  startedAt       DateTime      @default(now())
+  endedAt         DateTime?
+  course          Course        @relation(fields: [courseId], references: [id])
+  lecturer        User          @relation("LecturerSessions", fields: [lecturerId], references: [id])
+  attendance      Attendance[]
+  usedWindows     UsedQrWindow[]
+
+  @@index([courseId, status])
+}
+
+model Attendance {
+  id              String           @id @default(cuid())
+  sessionId       String
+  userId          String
+  scannedAt       DateTime         @default(now())
+  distanceMeters  Float?
+  status          AttendanceStatus @default(PRESENT)
+  rejectReason    String?
+  deviceHash      String?
+  session         Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id])
+
+  @@unique([sessionId, userId])
+}
+
+model UsedQrWindow {
+  id        String   @id @default(cuid())
+  sessionId String
+  window    Int
+  usedAt    DateTime @default(now())
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, window])
+}

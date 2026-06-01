@@ -1,0 +1,10 @@
+{
+  "name": "QR Відвідуваність",
+  "short_name": "QR Відвід.",
+  "description": "Сканування QR для відмітки присутності",
+  "start_url": "/student/scan",
+  "display": "standalone",
+  "background_color": "#0f1419",
+  "theme_color": "#3b82f6",
+  "lang": "uk"
+}
