@@ -9,14 +9,15 @@ export function Nav() {
 
   return (
     <nav className="nav">
-      <Link href="/" style={{ fontWeight: 700, color: "var(--text)", textDecoration: "none" }}>
+      <Link href="/" className="nav-brand">
         QR Відвідуваність
       </Link>
       <div className="nav-links">
         {user ? (
           <>
-            <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-              {user.fullName} ({roleLabel(user.role)})
+            <span className="nav-user" title={`${user.fullName} (${roleLabel(user.role)})`}>
+              <span className="nav-user-name">{user.fullName}</span>
+              <span className="nav-user-role"> ({roleLabel(user.role)})</span>
             </span>
             {user.role === "ADMIN" && <Link href="/admin/dashboard">Адмін</Link>}
             {user.role === "LECTURER" && (
@@ -27,7 +28,7 @@ export function Nav() {
             )}
             {user.role === "STUDENT" && <Link href="/student/scan">Сканувати</Link>}
             <Link href="/profile">Кабінет</Link>
-            <button type="button" className="btn btn-secondary" onClick={logout}>
+            <button type="button" className="btn btn-secondary nav-logout" onClick={logout}>
               Вийти
             </button>
           </>
