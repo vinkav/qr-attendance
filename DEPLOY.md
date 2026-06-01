@@ -2,6 +2,11 @@
 
 GitHub сам по собі не хостить Node.js і PostgreSQL, але репозиторій можна підключити до **Vercel** (сайт + HTTPS) і **Render** (API + база). Це займає ~15–20 хвилин, після чого ви отримаєте публічне посилання для захисту/демо.
 
+## Швидкі посилання (після push на GitHub)
+
+1. **Render (API + БД):** [Deploy to Render](https://render.com/deploy?repo=https://github.com/vinkav/qr-attendance) → Apply → дочекатися Live → скопіювати URL API.
+2. **Vercel (сайт):** [Deploy to Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvinkav%2Fqr-attendance&root-directory=apps%2Fweb&env=API_URL&envDescription=URL%20Render%20API%20(bez%20slash%20в%20кінці)&envLink=https%3A%2F%2Fgithub.com%2Fvinkav%2Fqr-attendance%2Fblob%2Fmain%2FDEPLOY.md) → вставити `API_URL` → Deploy.
+
 ## Схема
 
 ```
